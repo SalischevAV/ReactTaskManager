@@ -1,16 +1,27 @@
 import React from 'react';
 import { useState } from 'react';
+import { useEffect } from 'react';
 import TodoList from "./Todo/TodoList";
-import AddTodo from './Todo/AddTodo';
 import Context from './Context';
+import Loader from './Loader';
+import Modal from './Modal/Modal';
+
+const AddTodo = React.lazy(()=>import('./Todo/AddTodo'));
 
 function App() {
-  const [todos, setTodos] = useState([
-    { id: 1, completed: false, title: "Buy smth1" },
-    { id: 2, completed: true, title: "Buy smth2" },
-    { id: 3, completed: false, title: "Buy smth3" },
-  ]);
+  const [todos, setTodos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    fetch('https://jsonplaceholder.typicode.com/todos?_limit=10')
+      .then(response => response.json())
+      .then(res => {
+        setTimeout(() =>{
+          setTodos(res);
+          setLoading(false);
+        }, 3000);
+      });
+  }, []);
 
   function toggleTodo(id) {
     setTodos(
@@ -20,14 +31,14 @@ function App() {
         }
         return todo;
       })
-      )
-    }
+    )
+  }
 
-  function removeTodo(id){
+  function removeTodo(id) {
     setTodos(todos.filter(todo => todo.id !== id));
   }
 
-  function addTodo(title){
+  function addTodo(title) {
     setTodos(
       todos.concat([{
         title,
@@ -38,23 +49,30 @@ function App() {
   }
 
   return (
-    <Context.Provider value={{removeTodo: removeTodo}}>
-    <div className="wrapper">
-      <h1>React Tutorial</h1>
-      <AddTodo onCreate={addTodo} />
-      {
-        todos.length ? (
-          <TodoList
-          todos={todos}
-          onToggle={toggleTodo}
-        />
-        ) :(
-          <p>Nothing to do</p>
-        )
-      }
-     
+    <Context.Provider value={{ removeTodo: removeTodo }}>
+      <div className="wrapper">
+        <h1>React TodoList</h1>
+        <Modal />
 
-    </div>
+        <React.Suspense fallback={<p>Loading...</p>}>
+          <AddTodo onCreate={addTodo} />
+        </React.Suspense>
+
+        {loading && <Loader />}
+
+        {
+          todos.length ? (
+            <TodoList
+              todos={todos}
+              onToggle={toggleTodo}
+            />
+          ) : (
+            loading ? null : <p>Nothing to do</p>
+            )
+        }
+
+
+      </div>
     </Context.Provider>
   );
 }

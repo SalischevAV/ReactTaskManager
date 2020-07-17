@@ -30,7 +30,7 @@ function AddTodo({onCreate}) {
 
     return (
         <form style={{ marginBottom: '1rem' }} onSubmit={submitHandler}>
-            <input
+            <input 
                 {...input.bind}
             />
             <button type="submit">
